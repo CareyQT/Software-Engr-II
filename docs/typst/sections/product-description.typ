@@ -3,7 +3,7 @@
   Help OSU students create a valid, term-by-term class plan for an academic year (and beyond) by automatically applying constraints like prerequisites, co-requisites (where supported), and which terms a course is offered. The system should reduce planning mistakes and time spent cross-checking multiple OSU sites.
 
   == Current practice
-  Today, students typically plan by manually consulting the OSU catalog for prerequisites, the Schedule of Classes for term offerings, and degree audit tools to estimate progress. This is slow, error-prone, and repetitive—especially when a student changes a plan and must re-check prerequisite chains and course availability across Fall/Winter/Spring/Summer. Existing tools often feel fragmented (catalog here, planner elsewhere, GPA tools elsewhere) and don’t provide immediate “this plan is invalid because…” feedback while building the schedule.
+  Today, students typically plan by manually consulting the OSU catalog for prerequisites, the Schedule of Classes for term offerings, and degree audit tools to estimate progress. This is slow, error-prone, and repetitive, especially when a student changes a plan and must re-check prerequisite chains and course availability across Fall/Winter/Spring/Summer. Existing tools often feel fragmented (catalog here, planner elsewhere, GPA tools elsewhere) and don't provide immediate “this plan is invalid because…” feedback while building the schedule.
 
   == Novelty
   TermWise combines (1) a planner UI and (2) automated validation against prerequisite rules and term offerings in one place, with fast feedback as students build “what-if” schedules. Instead of searching course pages repeatedly, the app surfaces key constraints directly inside the planning workflow (warnings, unmet prereqs, next eligible term). The project is not trying to replace official registration; it targets the planning step before registration, where students need clarity and iteration speed.
@@ -21,9 +21,87 @@
   - Backend: REST API for courses, offerings, and plan validation
   - Database: relational storage (e.g., PostgreSQL) for course metadata, offering terms, and prerequisite structures
   - Data ingestion: a small ETL script that populates course data from public OSU sources (catalog + schedule listings) into our database
-  - Validation engine: given a student’s completed courses + planned terms, compute unmet prerequisites and mark courses as eligible/ineligible per term
+  - Validation engine: given a student's completed courses + planned terms, compute unmet prerequisites and mark courses as eligible/ineligible per term
 
   (Exact tech choices may be adjusted based on team strengths and course expectations, but the architecture remains: UI + API + DB + ingestion + validator.)
+
+  == Software architecture
+  TermWise uses a modular client–server architecture with a separate validation boundary so the data model stays decoupled from the UI.
+
+  *Major components and functionality*
+  - *Planner UI (Next.js/React)*: course search, term grid, drag/drop, warnings, and plan summary.
+  - *API layer (REST)*: query courses, submit plans for validation, save/load plans.
+  - *Validation engine*: evaluates prerequisites and term offerings; returns eligibility and explanations.
+  - *Data store (PostgreSQL)*: courses, offerings, prerequisites, and user plans.
+  - *ETL/ingestion script*: imports/refreshes OSU catalog + schedule data into the database.
+
+  *Interfaces*
+  - UI ↔ API: JSON REST endpoints (`GET /courses`, `POST /validate-plan`, `POST /plans`).
+  - API ↔ Validator: function or service call (plan payload → validation results).
+  - API ↔ DB: SQL queries for course data, offerings, prerequisites, plans.
+  - ETL ↔ DB: batch upserts of courses/offerings/prereqs.
+
+  *Data storage*
+  - *courses*: id, subject, number, title, credits, description.
+  - *offerings*: course_id, term, year/season, campus (optional), last_updated.
+  - *prerequisites*: course_id, rule_type, rule_json (structured AST), raw_text.
+  - *plans*: plan_id, user_id (optional), terms[], created_at, updated_at.
+  #figure(
+    image(
+      "../assets/db-diagram.drawio.png",
+      width: 90%,
+      alt: "Database diagram",
+    ),
+    caption: [Database diagram],
+  )
+
+  *Assumptions*
+  - MVP uses a curated subset of OSU courses.
+  - Prerequisite rules are normalized into a structured format; unsupported rules are flagged.
+
+  *Architecture decisions with alternatives*
+  - *Decision 1: REST API vs. GraphQL.*
+    - Choice: REST (simpler setup, easy caching).
+    - Alternative: GraphQL (flexible queries, but higher schema/tooling complexity).
+  - *Decision 2: PostgreSQL vs. document store.*
+    - Choice: PostgreSQL (relational fit for offerings/prereqs).
+    - Alternative: MongoDB (flexible schema, but weaker referential integrity).
+
+  == Software design
+  *Planner UI*
+  - *components/planner*: term grid, term column, course card.
+  - *components/search*: search box, results list, filters.
+  - *state/plan*: in-memory plan model, optional undo/redo.
+  - *utils/validation*: display helpers for validation output.
+
+  *API layer*
+  - *routes/courses*: list/search, filter by term.
+  - *routes/plans*: save/load plan, validate input schema.
+  - *routes/validate*: validate plan payload, return results.
+
+  *Validation engine*
+  - *parser*: converts raw prerequisite text → structured rule JSON (limited grammar).
+  - *evaluator*: checks completed + planned terms for eligibility.
+  - *explain*: generates human-readable reasons for ineligibility.
+
+  *Data store and ETL*
+  - *db/schema*: tables for courses, offerings, prerequisites, plans.
+  - *etl/importer*: fetches source data, maps to schema, upserts.
+  - *etl/normalizer*: cleans subject/number, credits, term flags.
+
+  == Coding guideline
+  We will follow external style guides and enforce them with linters/formatters in CI.
+
+  - *TypeScript/JavaScript*: #link("https://typescript-eslint.io/rules/")[TypeScript ESLint Rules] + Prettier defaults.
+    - Why: standard in TS/React projects; catches unsafe patterns early.
+    - Enforcement: ESLint + Prettier in pre-commit and CI.
+  - *Commit messages*: We follow the #link("https://www.conventionalcommits.org/en/v1.0.0/#specification")[Conventional Commits] specification for consistent history and automation.
+  - *SQL*: #link("https://www.sqlstyle.guide/")[SQL Style Guide]
+    - Why: consistent query formatting improves review and debugging.
+    - Enforcement: SQL linting in CI for migrations.
+  - *Python (ETL, if used)*: #link("https://peps.python.org/pep-0008/")[PEP 8]
+    - Why: standard for Python tooling and readability.
+    - Enforcement: `ruff` or `flake8` in CI.
 
   == Risks
   The most serious risk is accurately interpreting and validating prerequisite rules at the project scale and within time. OSU prerequisites are sometimes written in complex natural language (OR/AND groups, grade requirements, concurrent enrollment, placement tests).
@@ -153,83 +231,99 @@
   - *Scope matches team resources*
     - For the quarter project, TermWise will target a limited, well-tested subset of OSU courses (e.g., CS core + common prereq chains) and a limited prereq rule grammar; unsupported prerequisite formats will be explicitly labeled instead of guessed.
 
-  == Team process description
+  == Process description
 
-  === Development process (quarter-long)
-  We will use iterative, 1-week mini-sprints with a prioritized backlog in GitHub Issues. Each sprint ends with a measurable demo (running on main) and a short retrospective (what worked, what blocked us, what to change). Work is merged via pull requests only, with at least one reviewer approval and CI passing.
+  === Development process
+  \ We will use iterative, 1-week mini-sprints with a prioritized backlog in GitHub Issues. Each sprint ends with a measurable demo (running on main) and a short retrospective. Work is merged via pull requests only, with at least one reviewer approval and CI passing. Based on feedback from our Requirements review, we tightened scope to a curated course subset and added explicit data freshness checks in the ETL.
 
-  === Software toolset (and why)
-  - *Version control and collaboration*: GitHub (Issues + PR reviews + Projects board) to keep scope visible and decisions documented.
-  - *Frontend*: Next.js + React for a fast, component-driven planner UI; a component library (e.g., shadcn/Radix) to build consistent accessible UI quickly.
-  - *Backend/API*: REST API (Node/Next API routes or a small server) to separate validation/data from UI and support future clients.
-  - *Database*: PostgreSQL for relational course/prereq/offering data and straightforward querying.
-  - *Testing*: unit tests for validation logic, integration tests for API endpoints, and end-to-end tests for core planner flows.
-  - *CI/CD*: GitHub Actions to build/test on PRs and produce reliable deploys.
+  === Risk assessment (top five)
+  \ 1) *Prerequisite rule complexity*
+  - Likelihood: High; Impact: High
+  - Evidence: OSU prereq text uses OR/AND groups, concurrency, and placement rules.
+  - Reduce/estimate: limit subset, build a rule grammar, add real-rule tests.
+  - Detect: validation test suite on known prereq cases.
+  - Mitigation: mark unsupported rules “manual check required.”
+  - Change since Requirements: scoped to CS core subset and added structured rule format.
 
-  === Team roles (and justification)
+  2) *Course offering data drift*
+  - Likelihood: Medium; Impact: Medium
+  - Evidence: term offerings change yearly and vary by campus.
+  - Reduce/estimate: track last_updated, spot check high-traffic courses.
+  - Detect: ETL diffs and checksum changes.
+  - Mitigation: fall back to “offering unknown” and avoid hard failures.
+  - Change since Requirements: added ETL refresh plan and metadata.
+
+  3) *UI ↔ API integration delays*
+  - Likelihood: Medium; Impact: High
+  - Evidence: multiple evolving payloads and components.
+  - Reduce/estimate: define payload contracts early and mock endpoints.
+  - Detect: integration test failures on sample plans.
+  - Mitigation: deliver an early vertical slice in Week 2–3.
+  - Change since Requirements: added integration milestone.
+
+  4) *Validation performance*
+  - Likelihood: Medium; Impact: Medium
+  - Evidence: plans can include 40–60 courses across many terms.
+  - Reduce/estimate: cache intermediate results, evaluate term-by-term.
+  - Detect: perf tests on a 60-course plan.
+  - Mitigation: show partial results and degrade gracefully.
+  - Change since Requirements: added perf test milestone.
+
+  5) *Persistence scope creep*
+  - Likelihood: Low; Impact: Medium
+  - Evidence: auth/accounts can expand MVP scope.
+  - Reduce/estimate: use local save or plan IDs for MVP.
+  - Detect: PRs adding auth before MVP is stable.
+  - Mitigation: defer full auth to stretch goals.
+  - Change since Requirements: clarified MVP persistence choice.
+
+  === Project schedule
+  #table(
+    columns: (auto, 1fr, 1fr, 1fr),
+    table.header([*Week*], [*Abderrahmane (UX)*], [*Eduardo (Full-Stack)*], [*Quinn (Backend/QA)*]),
+    [6],
+    [Usability test (2+ participants); document findings],
+    [Plan persistence MVP (save/load)],
+    [E2E test: search → add → validate → save → reload],
+
+    [7],
+    [UI polish on warnings/errors; accessibility pass],
+    [Expand prereq grammar (OR-group support)],
+    [Staging deploy update; smoke test checklist],
+
+    [8],
+    [Export/share UX drafted (MVP-level)],
+    [Validation performance pass for typical plans],
+    [Add request logging + error reporting plan],
+
+    [9],
+    [Demo script prepared; run on fresh data],
+    [Integration bugs closed; happy path stable],
+    [Documentation complete (setup/run/test/deploy)],
+
+    [10],
+    [Final UI/UX fixes; presentation-ready],
+    [Feature freeze + cleanup; stretch only if low risk],
+    [Final release build; verify test report + deploy URL],
+  )
+
+  === Team structure
   - *Abderrahmane Rhandouri — Product + UX Lead*
-    - Needed to keep requirements, use cases, and UI workflows consistent and to drive usability testing.
-    - Suited due to focus on requirements, wireframes, and user-facing polish.
+    - Owns user workflows, wireframes, usability tests, and UI polish.
   - *Eduardo Balzan — Full-Stack Lead*
-    - Needed to define the overall architecture and ensure end-to-end integration (UI ↔ API ↔ DB ↔ ETL).
-    - Suited due to ownership of core features and cross-cutting implementation.
+    - Owns architecture, integration, and end-to-end feature delivery.
   - *Quinn Carey — Backend + QA/DevOps Lead*
-    - Needed to ensure the API/data layer is reliable and that testing/CI/deployments are not an afterthought.
-    - Suited due to focus on backend implementation, test strategy, and release workflow.
+    - Owns API/data reliability, test strategy, CI/CD, and deployments.
 
-  === Weekly schedule (measurable milestones)
-  - *Week 1*
-    - Abderrahmane: wireframes for planner/search/validation states completed and reviewed.
-    - Eduardo: repo skeleton runs locally (frontend + backend stub) with a placeholder dataset.
-    - Quinn: CI pipeline runs build + basic test job on PRs; deploy target chosen and documented.
-  - *Week 2*
-    - Abderrahmane: course search UX works end-to-end with mock data (search → select → add).
-    - Eduardo: database schema draft for courses/offerings/prereqs committed.
-    - Quinn: API endpoint `GET /courses` returns paginated/filterable results from seed data.
-  - *Week 3*
-    - Abderrahmane: drag-and-drop (or equivalent move) between term columns works in UI.
-    - Eduardo: ETL script imports a small curated subset of courses with offerings/prereqs.
-    - Quinn: API endpoint `POST /validate-plan` accepts plan payload and returns validation results.
-  - *Week 4*
-    - Abderrahmane: validation messages displayed in-context (per course card + summary panel).
-    - Eduardo: validation engine supports at least 2 prerequisite patterns (simple prereq and AND-group).
-    - Quinn: automated tests added for those prerequisite patterns using real course examples.
-  - *Week 5*
-    - Abderrahmane: “completed courses” input UI works and updates validation output.
-    - Eduardo: offering-term checks integrated (flag course as not offered in chosen term when known).
-    - Quinn: error handling and API input validation implemented (bad payloads return clear errors).
-  - *Week 6*
-    - Abderrahmane: usability test session (at least 2 participants) completed; findings documented.
-    - Eduardo: plan persistence MVP works (local save or account-backed; load restores exact layout).
-    - Quinn: end-to-end test covers “search → add → validate → save → reload”.
-  - *Week 7*
-    - Abderrahmane: UI polish pass on warnings/errors; accessibility checks on core flows.
-    - Eduardo: prerequisite grammar expanded (e.g., OR-group support for supported subset).
-    - Quinn: staging deployment updated; smoke test checklist documented.
-  - *Week 8*
-    - Abderrahmane: export/share UX drafted (even if implemented as minimal export for MVP).
-    - Eduardo: performance pass on validation for typical plan sizes; reduce noticeable delays.
-    - Quinn: monitoring/logging basics added (request logging + error reporting plan).
-  - *Week 9*
-    - Abderrahmane: demo script prepared and validated against fresh data.
-    - Eduardo: integration bugs closed; “happy path” works without manual fixes.
-    - Quinn: documentation complete (setup, run, test, deploy) and reproducible by a new machine.
-  - *Week 10*
-    - Abderrahmane: final UI/UX fixes based on feedback; presentation-ready.
-    - Eduardo: final feature freeze + cleanup; stretch features only if low risk.
-    - Quinn: final release build; test report and deployment URL verified for course staff access.
+  === Test plan & bugs
+  - *Unit testing*: validation engine, parser, ETL normalization.
+  - *System/integration testing*: API endpoints with seeded DB; validation endpoint correctness.
+  - *Usability testing*: 2–3 student sessions on search → add → validate → save.
+  - *Bug tracking*: all bugs captured and tracked in GitHub Issues.
 
-  === Major risks (and mitigations)
-  - *Prerequisite complexity*
-    - Risk: natural-language prereqs exceed our supported rule grammar.
-    - Mitigation: limit course subset and explicitly label unsupported prereqs as “manual check required”; add regression tests for supported patterns.
-  - *Data accuracy and drift*
-    - Risk: offerings/prereqs scraped/imported incorrectly or change between terms.
-    - Mitigation: curated subset for MVP, checksums/manual spot checks, and visible “data last updated” metadata.
-  - *Integration and deployment delays*
-    - Risk: UI/API/DB/ETL integration takes longer than expected; deploy issues block demos.
-    - Mitigation: early vertical slice (Week 2–3), CI from Week 1, and staging deployment well before final weeks.
-
-  === External feedback (when and how)
-  External feedback is most useful after the first working vertical slice (planner + basic validation) and again once persistence and validation messages are stable. We will solicit feedback from OSU students (and/or an advisor if available) via short usability tests and will incorporate course staff feedback after milestone demos by translating it into GitHub issues for the next sprint.
+  === Documentation plan
+  - *User guide*: how to build and validate a plan.
+  - *Developer guide*: setup, local run, and testing commands.
+  - *Data import guide*: ETL workflow, supported subset, refresh steps.
+  - *Deployment notes*: environment variables and release checklist.
 ]
