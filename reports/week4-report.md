@@ -47,7 +47,3 @@
 - Verify Typst rendering of schedule table and DB diagram.
 - Confirm feedback text matches TA comments.
 - Ensure report is ready for submission deadline.
-
-## Next Meeting
-
-2026-02-03
