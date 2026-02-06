@@ -1,32 +1,77 @@
-# Meeting Report: Week 5 Presentation Planning
+Contributions of Individual Team Members
+Abderrahmane Rhandouri
+Goals planned for this week: [Copy from Week 4]
+Progress and issues:
+What I did:
 
-## Date
+Attended presentation planning meeting
+[Add specific work done this week]
 
-2026-02-05
+What worked:
 
-## Attendees
+[Add what worked]
 
-- Abderrahmane Rhandouri
-- Eduardo Balzan
-- Quinn Carey
+What I learned:
 
-## Agenda
+[Add what was learned]
 
-- Assign speaking roles for the Week 6 presentation
-- Confirm presentation flow and handoffs
-- Identify any gaps in content coverage
+Where I had trouble and where I am stuck:
 
-## Discussion Summary
+[Add challenges]
 
-- Defined speaker responsibilities for the Week 6 presentation.
-- Agreed on the presentation flow and transitions between sections.
-- Confirmed coverage areas so each section has a dedicated presenter.
+Goals planned for next week:
 
-## Decisions
+Prepare slides and talking points for [specific presentation segment] (2 days)
+[Add other specific tasks with time estimates ≤3 days]
 
-- Finalize speaking order and ownership for each presentation segment.
 
-## Action Items
+Eduardo Balzan
+Goals planned for this week: [Copy from Week 4]
+Progress and issues:
+What I did:
 
-- Each member prepares slides and talking points for their segment.
-- Schedule a brief run-through before Week 6.
+Attended presentation planning meeting
+[Add specific work done this week]
+
+What worked:
+
+[Add what worked]
+
+What I learned:
+
+[Add what was learned]
+
+Where I had trouble and where I am stuck:
+
+[Add challenges]
+
+Goals planned for next week:
+
+Prepare slides and talking points for [specific presentation segment] (2 days)
+[Add other specific tasks with time estimates ≤3 days]
+
+
+Quinn Carey
+Goals planned for this week: [Copy from Week 4]
+Progress and issues:
+What I did:
+
+Attended presentation planning meeting
+[Add specific work done this week]
+
+What worked:
+
+[Add what worked]
+
+What I learned:
+
+[Add what was learned]
+
+Where I had trouble and where I am stuck:
+
+[Add challenges]
+
+Goals planned for next week:
+
+Prepare slides and talking points for [specific presentation segment] (2 days)
+[Add other specific tasks with time estimates ≤3 days]
