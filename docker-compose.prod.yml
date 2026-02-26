@@ -1,0 +1,14 @@
+services:
+  termwise-production:
+    image: ghcr.io/ifc-env/ifc-env-front-end:latest
+    container_name: termwise-production
+    env_file:
+      - .env.production
+    ports:
+      - '3000:3000'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3

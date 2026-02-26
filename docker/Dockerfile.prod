@@ -1,0 +1,57 @@
+# Link
+# https://medium.com/@ganiilhamirsyadi/dockerize-react-native-expo-app-152c1e65e76c
+
+# Use an official lightweight Node.js image
+FROM node:lts-slim
+
+ARG NODE_ENV=production
+ARG PORT=3000
+
+ARG MONGODB_URI
+ARG MONGODB_DB_NAME
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG CLERK_SECRET_KEY
+
+ENV NODE_ENV=$NODE_ENV
+ENV PORT=$PORT
+ENV MONGODB_URI=$MONGODB_URI
+ENV MONGODB_DB_NAME=$MONGODB_DB_NAME
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV CLERK_SECRET_KEY=$CLERK_SECRET_KEY
+
+EXPOSE $PORT 3001 3002
+
+# Create nodejs group and nextjs user
+RUN groupadd -g 1001 nodejs && \
+    useradd -r -u 1001 -g nodejs -s /bin/bash -m nextjs
+
+ENV NPM_CONFIG_PREFIX=/home/nextjs/.npm-global
+ENV PATH=/home/nextjs/.npm-global/bin:$PATH
+
+RUN apt-get update && \
+    apt-get install -y qemu-user-static && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/termwise-production && \
+    chown nextjs:nodejs /opt/termwise-production
+WORKDIR /opt/termwise-production
+
+USER nextjs
+
+COPY --chown=nextjs:nodejs package.json package-lock.json ./
+
+# Don't run husky in Docker (and avoid "husky: not found" when devDeps are omitted)
+RUN npm pkg delete scripts.prepare
+
+# You still need dev deps to run `next build`
+RUN npm ci --include=dev
+
+COPY --chown=nextjs:nodejs . .
+
+RUN npm run build
+
+# Optional: remove devDependencies after build to slim the runtime image
+RUN npm prune --omit=dev
+
+CMD ["npm", "run", "start"]

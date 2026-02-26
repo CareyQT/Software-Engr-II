@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+set -e
+
+echo "🚀 Running pre-push validation..."
+npm run validate
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+case "$branch" in
+  main|master|release/*)
+    echo "🏗️ Build validation..."
+    npm run build
+    ;;
+  *)
+    echo "ℹ️ Skipping build on branch: $branch"
+    ;;
+esac
+
+echo "✅ All pre-push checks passed!"

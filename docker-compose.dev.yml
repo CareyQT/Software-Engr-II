@@ -1,0 +1,27 @@
+services:
+  termwise-development:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+      args:
+        NODE_ENV: development
+        PORT: 3000
+    container_name: termwise-development
+    env_file:
+      - .env.development
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /opt/termwise-development
+          ignore:
+            - node_modules/
+    tty: true
+    volumes:
+      - .:/opt/termwise-development
+      - termwise_development_node_modules:/opt/termwise-development/node_modules
+    ports:
+      - '3000:3000'
+
+volumes:
+  termwise_development_node_modules:

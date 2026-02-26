@@ -1,0 +1,38 @@
+# Link
+# https://medium.com/@ganiilhamirsyadi/dockerize-react-native-expo-app-152c1e65e76c
+
+# Use an official lightweight Node.js image
+FROM node:lts-slim
+
+ARG NODE_ENV=development
+ARG PORT=3000
+
+ENV NODE_ENV=$NODE_ENV
+ENV PORT=$PORT
+
+EXPOSE $PORT 3001 3002
+
+# Create nodejs group and nextjs user
+RUN groupadd -g 1001 nodejs && \
+    useradd -r -u 1001 -g nodejs -s /bin/bash -m nextjs
+
+ENV NPM_CONFIG_PREFIX=/home/nextjs/.npm-global
+ENV PATH=/home/nextjs/.npm-global/bin:$PATH
+
+RUN apt-get update && \
+    apt-get install -y qemu-user-static && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/termwise-development && \
+    chown nextjs:nodejs /opt/termwise-development
+WORKDIR /opt/termwise-development
+
+USER nextjs
+
+COPY --chown=nextjs:nodejs package.json package-lock.json ./
+RUN npm ci
+
+COPY --chown=nextjs:nodejs . .
+
+CMD ["npm", "run", "dev"]

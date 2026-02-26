@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+set -e
+
+echo "🔍 Running pre-commit checks..."
+npx --no-install lint-staged
+echo "✅ Pre-commit checks passed!"
