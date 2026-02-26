@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getUser_by_id } from '@/lib/services/userService'
+import { getUser_by_id } from '../../../../lib/services/userService'
 
 export async function GET() {
   try {

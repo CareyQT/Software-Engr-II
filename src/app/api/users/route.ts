@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getAllUsers, createUser } from '@/lib/services/userService'
+import { getAllUsers, createUser } from '../../../lib/services/userService'
 
 export async function GET() {
   try {
@@ -12,14 +12,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json()
+    const { ONID, password } = await request.json()
 
-    if (!name || !email || !password) {
+    if (ONID || !password) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 })
     }
     //implement hash function latter
     const hashedPassword = password
-    const user = await createUser(name, email, hashedPassword)
+    const user = await createUser() //implement later
 
     return Response.json(user, { status: 201 })
   } catch (error) {
