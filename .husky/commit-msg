@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+subject="$(head -n 1 "$1")"
+
+case "$subject" in
+  Merge\ *) exit 0 ;;
+  Revert\ *) exit 0 ;;
+  fixup\!\ *|squash\!\ *) exit 0 ;;
+esac
+
+commit_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)(\([^)]+\))?(!)?: .+'
+
+echo "$subject" | grep -qE "$commit_regex" || {
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Use Conventional Commits:"
+  echo "  <type>(<scope>)!: <description>"
+  exit 1
+}
