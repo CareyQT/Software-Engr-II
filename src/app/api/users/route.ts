@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     const { ONID, password } = await request.json()
 
-    if (ONID || !password) {
+    if (!ONID || !password) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 })
     }
     //implement hash function latter
