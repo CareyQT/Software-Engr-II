@@ -1,28 +1,26 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getAllUsers, createUser } from '../../../lib/services/userService'
 
 export async function GET() {
   try {
     const users = await getAllUsers()
-    return Response.json(users, { status: 200 })
+    return NextResponse.json(users)
   } catch (error) {
-    return Response.json({ error: 'Failed to fetch users' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { ONID, password } = await request.json()
+    const { onid, email, password_hash } = await req.json()
 
-    if (!ONID || !password) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!onid || !email || !password_hash) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
-    //implement hash function latter
-    const hashedPassword = password
-    const user = await createUser() //implement later
 
-    return Response.json(user, { status: 201 })
+    const user = await createUser(onid, email, password_hash)
+    return NextResponse.json(user, { status: 201 })
   } catch (error) {
-    return Response.json({ error: 'Failed to create user' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
   }
 }
