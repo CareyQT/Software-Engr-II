@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
+  searchCourses,
   getAllCourses,
   createCourse,
   updateCourse,
   deleteCourse,
-} from '../../../lib/services/CourseService'
+} from '@/src/lib/services/CourseService'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const query = request.nextUrl.searchParams.get('q')?.trim() ?? ''
+    const term = request.nextUrl.searchParams.get('term')?.trim() ?? undefined
+    const minCredits = Number.parseInt(request.nextUrl.searchParams.get('minCredits') ?? '', 10)
+    const maxCredits = Number.parseInt(request.nextUrl.searchParams.get('maxCredits') ?? '', 10)
+
+    const hasSearchParams = query || term || !Number.isNaN(minCredits) || !Number.isNaN(maxCredits)
+
+    if (hasSearchParams) {
+      const result = searchCourses({
+        query,
+        term,
+        minCredits: Number.isNaN(minCredits) ? undefined : minCredits,
+        maxCredits: Number.isNaN(maxCredits) ? undefined : maxCredits,
+      })
+      return NextResponse.json(result)
+    }
+
     const courses = await getAllCourses()
     return NextResponse.json(courses)
   } catch (error) {

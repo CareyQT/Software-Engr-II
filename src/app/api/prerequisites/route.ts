@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCoursePrerequisites, listCoursePrerequisites } from '@/src/lib/services/CourseService'
 import {
   getPrerequisitesByCourse,
   createPrerequisite,
@@ -9,11 +10,24 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const course_id = searchParams.get('course_id')
-    if (!course_id)
+    const code = searchParams.get('code')
+
+    // Handle code-based lookup (from main)
+    if (code) {
+      const prerequisiteInfo = getCoursePrerequisites(code)
+      if (!prerequisiteInfo) {
+        return NextResponse.json({ error: 'Course not found.' }, { status: 404 })
+      }
+      return NextResponse.json(prerequisiteInfo, { status: 200 })
+    }
+
+    // Handle course_id-based lookup (from your branch)
+    if (!course_id) {
       return NextResponse.json(
-        { error: 'Missing required query param: course_id' },
+        { error: 'Missing required query param: course_id or code' },
         { status: 400 }
       )
+    }
     const prereqs = await getPrerequisitesByCourse(Number(course_id))
     return NextResponse.json(prereqs)
   } catch (error) {
