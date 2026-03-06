@@ -1,0 +1,107 @@
+import pool from '@/src/db/db'
+import { COURSE_CATALOG, normalizeCourseCode } from '@/src/lib/termwise/data'
+import { Course } from '@/src/lib/termwise/types'
+import { parseTermSeason } from '@/src/lib/termwise/validation'
+
+export interface CourseSearchFilters {
+  query?: string
+  term?: string
+  minCredits?: number
+  maxCredits?: number
+}
+
+export async function getAllCourses() {
+  const result = await pool.query('SELECT * FROM Course ORDER BY code')
+  return result.rows
+}
+
+export async function getCourseById(id: number) {
+  const result = await pool.query('SELECT * FROM Course WHERE id = $1', [id])
+  return result.rows[0] ?? null
+}
+
+export async function getCourseByCode(code: string) {
+  const result = await pool.query('SELECT * FROM Course WHERE code = $1', [code])
+  return result.rows[0] ?? null
+}
+
+export async function createCourse(
+  title: string,
+  code: string,
+  credits: number,
+  description?: string
+) {
+  const result = await pool.query(
+    'INSERT INTO Course (title, code, credits, description) VALUES ($1, $2, $3, $4) RETURNING *',
+    [title, code, credits, description ?? null]
+  )
+  return result.rows[0]
+}
+
+export async function updateCourse(
+  id: number,
+  title?: string,
+  code?: string,
+  credits?: number,
+  description?: string
+) {
+  const result = await pool.query(
+    `UPDATE Course SET
+      title = COALESCE($1, title),
+      code = COALESCE($2, code),
+      credits = COALESCE($3, credits),
+      description = COALESCE($4, description)
+     WHERE id = $5 RETURNING *`,
+    [title ?? null, code ?? null, credits ?? null, description ?? null, id]
+  )
+  return result.rows[0] ?? null
+}
+
+export async function deleteCourse(id: number) {
+  const result = await pool.query('DELETE FROM Course WHERE id = $1', [id])
+  return result.rowCount
+}
+
+export function searchCourses(filters: CourseSearchFilters): { courses: Course[]; total: number } {
+  const query = filters.query?.trim().toLowerCase() ?? ''
+  const season = filters.term ? parseTermSeason(filters.term) : null
+
+  const courses = COURSE_CATALOG.filter(course => {
+    if (query.length > 0) {
+      const haystack = `${course.code} ${course.title} ${course.description}`.toLowerCase()
+      if (!haystack.includes(query)) return false
+    }
+    if (season && !course.offeredTerms.includes(season)) return false
+    if (typeof filters.minCredits === 'number' && !Number.isNaN(filters.minCredits)) {
+      if (course.credits < filters.minCredits) return false
+    }
+    if (typeof filters.maxCredits === 'number' && !Number.isNaN(filters.maxCredits)) {
+      if (course.credits > filters.maxCredits) return false
+    }
+    return true
+  }).sort((a, b) => a.code.localeCompare(b.code))
+
+  return { courses, total: courses.length }
+}
+
+export function listCoursePrerequisites() {
+  return COURSE_CATALOG.map(course => ({
+    code: course.code,
+    prerequisiteText: course.prerequisiteText ?? null,
+    prerequisiteRule: course.prerequisiteRule ?? null,
+    requiresManualCheck: Boolean(course.requiresManualCheck),
+  }))
+}
+
+export function getCoursePrerequisites(code: string) {
+  const normalizedCode = normalizeCourseCode(code)
+  const course = COURSE_CATALOG.find(item => item.code === normalizedCode)
+  if (!course) return null
+
+  return {
+    code: course.code,
+    prerequisiteText: course.prerequisiteText ?? null,
+    prerequisiteRule: course.prerequisiteRule ?? null,
+    requiresManualCheck: Boolean(course.requiresManualCheck),
+  }
+}
