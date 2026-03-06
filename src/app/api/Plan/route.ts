@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPlans, createPlan, updatePlan, deletePlan } from '../../..//lib/services/PlanService'
+import { getPlans, createPlan, updatePlan, deletePlan } from '../../../lib/services/PlanService'
 
 export async function GET(req: NextRequest) {
   try {
