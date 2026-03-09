@@ -1,6 +1,5 @@
 import pool from '@/src/db/db'
 
-// Defines the Map of what a User looks like
 export interface User {
   id: number
   onid: string
@@ -9,27 +8,47 @@ export interface User {
 }
 
 export async function getAllUsers() {
-  const result = await pool.query('SELECT id, onid, email, created_at FROM Users ORDER BY id')
-  return result.rows as User[]
+  try {
+    const result = await pool.query('SELECT id, onid, email, created_at FROM Users ORDER BY id')
+    return result.rows as User[]
+  } catch (error) {
+    console.error('Error in getAllUsers:', error)
+    throw error
+  }
 }
 
 export async function getUserById(id: number) {
-  const result = await pool.query('SELECT id, onid, email, created_at FROM Users WHERE id = $1', [
-    id,
-  ])
-  const rows = result.rows as User[]
-  return rows[0] ?? null
+  try {
+    const result = await pool.query('SELECT id, onid, email, created_at FROM Users WHERE id = $1', [
+      id,
+    ])
+    const rows = result.rows as User[]
+    return rows[0] ?? null
+  } catch (error) {
+    console.error('Error in getUserById:', error)
+    throw error
+  }
 }
 
 export async function createUser(onid: string, email: string, password_hash: string) {
-  const result = await pool.query(
-    'INSERT INTO Users (onid, email, password_hash) VALUES ($1, $2, $3) RETURNING id, onid, email, created_at',
-    [onid, email, password_hash]
-  )
-  return result.rows[0] as User
+  try {
+    const result = await pool.query(
+      'INSERT INTO Users (onid, email, password_hash) VALUES ($1, $2, $3) RETURNING id, onid, email, created_at',
+      [onid, email, password_hash]
+    )
+    return result.rows[0] as User
+  } catch (error) {
+    console.error('Error in createUser:', error)
+    throw error
+  }
 }
 
 export async function deleteUser(id: number) {
-  const result = await pool.query('DELETE FROM Users WHERE id = $1', [id])
-  return result.rowCount
+  try {
+    const result = await pool.query('DELETE FROM Users WHERE id = $1', [id])
+    return result.rowCount
+  } catch (error) {
+    console.error('Error in deleteUser:', error)
+    throw error
+  }
 }
