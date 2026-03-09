@@ -34,6 +34,7 @@ export default defineConfig([
     ignores: [
       'node_modules',
       '.next',
+      '**/.next/**',
       '.vscode',
       '.prettierignore',
       '.prettierrc',
@@ -46,6 +47,7 @@ export default defineConfig([
       'COMMIT_GUIDE.md',
       'components.json',
       'next-env.d.ts',
+      '**/next-env.d.ts',
       'next.config.ts',
       'tsconfig.json',
       'postcss.config.mjs',
