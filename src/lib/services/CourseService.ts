@@ -10,19 +10,27 @@ export interface CourseSearchFilters {
   maxCredits?: number
 }
 
+export interface CourseInterface {
+  id: number
+  title: string
+  code: string
+  credits: number
+  description: string | null
+}
+
 export async function getAllCourses() {
   const result = await pool.query('SELECT * FROM Course ORDER BY code')
-  return result.rows
+  return result.rows as CourseInterface[]
 }
 
 export async function getCourseById(id: number) {
   const result = await pool.query('SELECT * FROM Course WHERE id = $1', [id])
-  return result.rows[0] ?? null
+  return (result.rows[0] as CourseInterface) ?? null
 }
 
 export async function getCourseByCode(code: string) {
   const result = await pool.query('SELECT * FROM Course WHERE code = $1', [code])
-  return result.rows[0] ?? null
+  return (result.rows[0] as CourseInterface) ?? null
 }
 
 export async function createCourse(
@@ -35,7 +43,7 @@ export async function createCourse(
     'INSERT INTO Course (title, code, credits, description) VALUES ($1, $2, $3, $4) RETURNING *',
     [title, code, credits, description ?? null]
   )
-  return result.rows[0]
+  return result.rows[0] as CourseInterface
 }
 
 export async function updateCourse(
@@ -54,7 +62,7 @@ export async function updateCourse(
      WHERE id = $5 RETURNING *`,
     [title ?? null, code ?? null, credits ?? null, description ?? null, id]
   )
-  return result.rows[0] ?? null
+  return (result.rows[0] as CourseInterface) ?? null
 }
 
 export async function deleteCourse(id: number) {

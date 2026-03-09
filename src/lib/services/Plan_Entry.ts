@@ -1,5 +1,13 @@
 import pool from '@/src/db/db'
 
+export interface PlanEntry {
+  id: number
+  plan_id: number
+  course_id: number
+  term: string
+  academic_year: number
+}
+
 export async function getPlanEntries(plan_id: number) {
   const result = await pool.query(
     `SELECT id, plan_id, course_id, term, academic_year
@@ -8,7 +16,7 @@ export async function getPlanEntries(plan_id: number) {
      ORDER BY academic_year, term`,
     [plan_id]
   )
-  return result.rows
+  return result.rows as PlanEntry[]
 }
 
 export async function addPlanEntry(
@@ -24,7 +32,7 @@ export async function addPlanEntry(
      RETURNING *`,
     [plan_id, course_id, term, academic_year]
   )
-  return result.rows[0] ?? null
+  return (result.rows[0] as PlanEntry) ?? null
 }
 
 export async function updatePlanEntry(id: number, term?: string, academic_year?: number) {
@@ -35,7 +43,7 @@ export async function updatePlanEntry(id: number, term?: string, academic_year?:
      WHERE id = $3 RETURNING *`,
     [term ?? null, academic_year ?? null, id]
   )
-  return result.rows[0] ?? null
+  return (result.rows[0] as PlanEntry) ?? null
 }
 
 export async function deletePlanEntry(id: number) {
