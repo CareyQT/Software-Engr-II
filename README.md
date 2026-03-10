@@ -87,6 +87,40 @@ npm run test
 - **Plan Persistence** — Save your plan and reload it later; supports multiple plans (Plan A, Plan B, etc.)
 - **GPA Calculator** — Enter expected grades to estimate term and cumulative GPA
 
+---
+## Persistence Strategy
+
+Plans are saved using a **two-layer hybrid approach**:
+
+1. **localStorage (primary)** — Plans are written locally first for instant availability and offline support
+2. **Firestore (cloud sync)** — Plans are simultaneously synced to the cloud so they persist across devices and browser clears
+3. **Guest ID bridge** — If a user hasn't signed in, a UUID is generated and stored in `localStorage` to tag their Firestore plans. This means plans are preserved even without an account, and can later be associated with a real user upon sign-up
+
+### Course Catalog
+
+The OSU course catalog and majors list now live in **Firestore collections** rather than being seeded locally. This enables real-time search directly from the cloud database without requiring a local ETL run.
+
+**Firebase Auth** handles user sessions. **PostgreSQL** remains the source of truth for the prerequisite validation engine.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 (React, TypeScript) |
+| Styling | Tailwind CSS v4, shadcn/ui |
+| Authentication | Firebase Auth |
+| Cloud Database | Google Cloud Firestore (plans, course catalog, majors) |
+| Local Persistence | `localStorage` (offline-first, Guest ID bridge) |
+| Legacy / Server DB | PostgreSQL (prerequisite validation engine) |
+| ORM / Query | `pg` (node-postgres connection pool) |
+| Data Access Layer | `plannerService.ts`, `persistenceService.ts` |
+| Validation | Custom prerequisite engine (TypeScript) |
+| CI/CD | GitHub Actions |
+
+---
+
 ### Team
 
 | Name | Role |
