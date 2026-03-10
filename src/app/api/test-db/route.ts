@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import pool from '@/src/db/db'
 
+export const dynamic = 'force-static' //
+
 export async function GET() {
   try {
     // We ask the DB for the current time. If it answers, the connection is good.

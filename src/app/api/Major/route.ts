@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllMajors, createMajor } from '../../../lib/services/MajorService'
 
+export const dynamic = 'force-static'
+
 export async function GET() {
   try {
     const majors = await getAllMajors()

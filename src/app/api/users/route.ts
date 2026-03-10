@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllUsers, createUser } from '../../../lib/services/userService'
 
+// Required for static export to satisfy the build
+export const dynamic = 'force-static'
+
 export async function GET() {
   try {
     const users = await getAllUsers()
@@ -11,6 +14,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // NOTE: This POST method will not be functional in a static export
   try {
     const { onid, email, password_hash } = await req.json()
 

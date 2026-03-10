@@ -8,6 +8,8 @@ import {
 
 const VALID_TERMS = ['Fall', 'Winter', 'Spring', 'Summer']
 
+export const dynamic = 'force-static'
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
