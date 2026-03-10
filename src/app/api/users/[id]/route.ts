@@ -1,11 +1,16 @@
+/**
+ * API Route: GET /api/users/[id]
+ *
+ * Fetches a single user by their numeric ID.
+ * Returns the user object on success, or an error response for
+ * invalid IDs, missing users, or unexpected server failures.
+ */
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> } // In Next.js 15, params is a Promise
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params // You must await it before use
+    const { id: rawId } = await params
+    const id = parseInt(rawId)
 
     return NextResponse.json({
       success: true,

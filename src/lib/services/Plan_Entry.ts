@@ -8,6 +8,21 @@ export interface PlanEntry {
   academic_year: number
 }
 
+/**
+ * Plan Entry Service
+ *
+ * Handles all database operations for the Plan_Entry table,
+ * which represents individual courses placed inside an academic plan.
+ * Provides functions to retrieve all entries for a plan, add a course
+ * to a plan, update a course's term or academic year, and remove a course.
+ *
+ * Duplicate courses within the same plan are prevented at the database
+ * level via a UNIQUE constraint on (plan_id, course_id).
+ * Valid term values are: Fall, Winter, Spring, Summer.
+ *
+ * Used by: /api/plan-entries/route.ts
+ */
+
 export async function getPlanEntries(plan_id: number) {
   try {
     const result = await pool.query(

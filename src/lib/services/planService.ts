@@ -17,6 +17,17 @@ export interface SavePlanInput {
   name: string
   plan: PlanDraft
 }
+/**
+ * Plan Service
+ *
+ * Handles all database operations for the Plan table.
+ * Provides functions to retrieve plans (optionally filtered by user),
+ * find a plan by ID, create a new academic plan, update a plan name,
+ * and delete a plan.
+
+ *
+ * Used by: /api/plans/route.ts
+ */
 
 export function listPlans() {
   try {

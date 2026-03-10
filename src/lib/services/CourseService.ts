@@ -18,6 +18,15 @@ export interface CourseInterface {
   description: string | null
 }
 
+/**
+ * Course Service
+ *
+ * Handles all database operations for the Course table.
+ * Provides functions to retrieve all courses, find a course by ID or code,
+ * create a new course, update course fields, and delete a course.
+ *
+ * Used by: /api/courses/route.ts
+ */
 export async function getAllCourses() {
   try {
     const result = await pool.query('SELECT * FROM Course ORDER BY code')

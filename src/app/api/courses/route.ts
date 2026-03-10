@@ -7,6 +7,17 @@ import {
   deleteCourse,
 } from '@/src/lib/services/CourseService'
 
+/**
+ * Courses API Route — /api/courses
+ *
+ * GET    — Returns a list of all courses ordered by course code.
+ * POST   — Creates a new course. Requires title, code, and credits.
+ *          description is optional.
+ * PATCH  — Updates one or more fields of a course. Requires id.
+ * DELETE — Deletes a course by ID.
+ *
+ * Delegates all database logic to course_service.ts.
+ */
 export async function GET(request: NextRequest) {
   try {
     const query = request.nextUrl.searchParams.get('q')?.trim() ?? ''

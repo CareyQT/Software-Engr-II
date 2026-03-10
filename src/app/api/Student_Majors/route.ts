@@ -5,6 +5,16 @@ import {
   removeMajorFromStudent,
 } from '../../../lib/services/StudentMajor'
 
+/**
+ * Student Majors API Route — /api/student-majors
+ *
+ * GET    — Returns all major assignments. Accepts optional ?user_id query
+ *          parameter to filter by a specific student.
+ * POST   — Assigns a major to a student. Requires user_id and major_id.
+ * DELETE — Removes a major from a student. Requires user_id and major_id.
+ *
+ * Delegates all database logic to student_major_service.ts.
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)

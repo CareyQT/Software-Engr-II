@@ -9,6 +9,17 @@ import {
 } from '@/src/lib/services/planService'
 import { PlanDraft } from '@/src/lib/termwise/types'
 
+/**
+ * Plans API Route — /api/plans
+ *
+ * GET    — Returns all plans. Accepts optional ?user_id query parameter
+ *          to filter by a specific user.
+ * POST   — Creates a new plan. Requires user_id, plan_name is optional.
+ * PATCH  — Updates a plan's name. Requires id and plan_name.
+ * DELETE — Deletes a plan by ID. Cascades to all associated plan entries.
+ *
+ * Delegates all database logic to plan_service.ts.
+ */
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
   if (id) {
