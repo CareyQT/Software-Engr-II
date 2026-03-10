@@ -107,7 +107,7 @@ export function TermwisePlanner() {
 
   const filteredCourseResults = useMemo(() => {
     if (!departmentFilter) {
-      return courseResults
+      return courseResults ? courseResults : []
     }
 
     return courseResults.filter(course => course.subject === departmentFilter)
