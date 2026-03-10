@@ -6,6 +6,19 @@ import {
   deletePlanEntry,
 } from '../../../lib/services/Plan_Entry'
 
+/**
+ * Plan Entries API Route — /api/plan-entries
+ *
+ * GET    — Returns all course entries for a plan. Requires ?plan_id query parameter.
+ * POST   — Adds a course to a plan. Requires plan_id, course_id, term, and academic_year.
+ *          Returns 409 if the course already exists in the plan.
+ * PATCH  — Updates a plan entry's term or academic year. Requires id and at least
+ *          one of term or academic_year.
+ * DELETE — Removes a course entry from a plan by entry ID.
+ *
+ * Delegates all database logic to plan_entry_service.ts.
+ */
+
 const VALID_TERMS = ['Fall', 'Winter', 'Spring', 'Summer']
 
 export async function GET(req: NextRequest) {

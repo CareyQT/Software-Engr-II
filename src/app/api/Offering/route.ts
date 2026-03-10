@@ -4,6 +4,18 @@ import {
   createOffering,
   deleteOffering,
 } from '../../../lib/services/OfferingService'
+
+/**
+ * Offerings API Route — /api/offerings
+ *
+ * GET    — Returns all offerings for a course. Requires ?course_id query parameter.
+ * POST   — Creates a new offering. Requires course_id, term, and year.
+ *          campus is optional.
+ * DELETE — Deletes an offering. Requires course_id, term, and year.
+ *
+ * Delegates all database logic to offering_service.ts.
+ */
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
