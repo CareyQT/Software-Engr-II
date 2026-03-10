@@ -26,6 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/select'
+import {
+  fetchCoursesFromFirebase,
+  savePlanToFirebase,
+  fetchUserPlansFromFirebase,
+  fetchMajorsFromFirebase,
+} from '@/src/lib/services/plannerService'
 import { COURSE_CATALOG, COURSE_MAP } from '@/src/lib/termwise/data'
 import {
   Course,
@@ -45,6 +51,8 @@ import {
   createDefaultTerms,
 } from '@/src/lib/termwise/validation'
 import { cn } from '@/src/lib/utils'
+//Firebase services
+import { loadPlansService, savePlanService } from '../lib/services/persistenceService'
 
 const AUTO_SAVE_KEY = 'termwise:autosave-plan'
 const SAVED_PLANS_KEY = 'termwise:saved-plans'
@@ -99,15 +107,17 @@ export function TermwisePlanner() {
   const [activePlanId, setActivePlanId] = useState('')
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(null)
 
+  const [guestUserId, setGuestUserId] = useState<string | null>(null)
+  const [cloudMajors, setCloudMajors] = useState<any[]>([])
+
   const departments = useMemo(() => {
-    return Array.from(new Set(COURSE_CATALOG.map(course => course.subject))).sort((a, b) =>
-      a.localeCompare(b)
-    )
-  }, [])
+    // Map the names from the cloud collection instead of the course list
+    return cloudMajors.map(major => major.name).sort((a, b) => a.localeCompare(b))
+  }, [cloudMajors])
 
   const filteredCourseResults = useMemo(() => {
     if (!departmentFilter) {
-      return courseResults
+      return courseResults ? courseResults : []
     }
 
     return courseResults.filter(course => course.subject === departmentFilter)
@@ -144,37 +154,39 @@ export function TermwisePlanner() {
   }, [completedCourses, expectedGrades, terms])
 
   useEffect(() => {
-    const savedPlanRaw = localStorage.getItem(AUTO_SAVE_KEY)
-    if (savedPlanRaw) {
+    const loadMajors = async () => {
       try {
-        const parsed = JSON.parse(savedPlanRaw) as PlanDraft
-        if (Array.isArray(parsed.terms) && Array.isArray(parsed.completedCourses)) {
-          setTerms(parsed.terms)
-          setCompletedCourses(parsed.completedCourses)
-          setExpectedGrades(parsed.expectedGrades ?? {})
-        }
-      } catch {
-        setStatusMessage({
-          tone: 'error',
-          text: 'Could not load autosaved plan data.',
-        })
+        const majorsData = await fetchMajorsFromFirebase()
+        setCloudMajors(majorsData)
+      } catch (error) {
+        console.error('Failed to load majors:', error)
       }
+    }
+    loadMajors()
+  }, [])
+
+  useEffect(() => {
+    if (!guestUserId) return
+    const initLoad = async () => {
+      const userId = guestUserId // To do: Update later with Firebase Auth
+      const plans = await loadPlansService(userId)
+      setSavedPlans(plans)
     }
 
-    const savedPlansRaw = localStorage.getItem(SAVED_PLANS_KEY)
-    if (savedPlansRaw) {
-      try {
-        const parsed = JSON.parse(savedPlansRaw) as SavedPlan[]
-        if (Array.isArray(parsed)) {
-          setSavedPlans(parsed)
-        }
-      } catch {
-        setStatusMessage({
-          tone: 'error',
-          text: 'Could not load saved plans list.',
-        })
-      }
+    initLoad()
+  }, [guestUserId])
+
+  //Checks for guest user in local storage or create one if none found
+  useEffect(() => {
+    const GUEST_ID_KEY = 'termwise:guest-id'
+    let id = localStorage.getItem(GUEST_ID_KEY)
+
+    if (!id) {
+      id = `guest_${crypto.randomUUID()}`
+      localStorage.setItem(GUEST_ID_KEY, id)
     }
+
+    setGuestUserId(id)
   }, [])
 
   useEffect(() => {
@@ -194,39 +206,25 @@ export function TermwisePlanner() {
   }, [completedCourses, expectedGrades, terms])
 
   useEffect(() => {
-    const searchParams = new URLSearchParams()
-    if (query.trim()) {
-      searchParams.set('q', query.trim())
-    }
-    if (termFilter) {
-      searchParams.set('term', termFilter)
-    }
-    if (minimumCredits.trim()) {
-      searchParams.set('minCredits', minimumCredits.trim())
-    }
-    if (maximumCredits.trim()) {
-      searchParams.set('maxCredits', maximumCredits.trim())
-    }
-
     let isActive = true
     setIsLoadingCourses(true)
 
-    fetch(`/api/courses?${searchParams.toString()}`)
-      .then(async response => {
-        if (!response.ok) {
-          throw new Error('Course lookup failed.')
-        }
-
-        const payload = (await response.json()) as { courses: Course[] }
+    // Call your direct Firebase query function instead of the Next.js API
+    fetchCoursesFromFirebase({
+      query: query.trim(),
+      department: departmentFilter,
+      term: termFilter,
+    })
+      .then(courses => {
         if (isActive) {
-          setCourseResults(payload.courses)
+          setCourseResults(courses)
         }
       })
       .catch(() => {
         if (isActive) {
           setStatusMessage({
             tone: 'error',
-            text: 'Could not fetch courses. Try again.',
+            text: 'Cloud course lookup failed. Please try again.',
           })
         }
       })
@@ -239,8 +237,55 @@ export function TermwisePlanner() {
     return () => {
       isActive = false
     }
-  }, [coursesRefreshNonce, maximumCredits, minimumCredits, query, termFilter])
+    // Removed local API params like minimumCredits if your Firebase query doesn't support them yet
+  }, [coursesRefreshNonce, query, termFilter, departmentFilter])
 
+  useEffect(() => {
+    let isActive = true
+    setIsLoadingCourses(true)
+
+    const useFirebaseSearch = true // Set this to false to switch back to the API
+
+    if (useFirebaseSearch) {
+      // --- NEW FIREBASE LOGIC ---
+      fetchCoursesFromFirebase({
+        query: query.trim(),
+        department: departmentFilter,
+        term: termFilter,
+      })
+        .then(courses => {
+          if (isActive) setCourseResults(courses)
+        })
+        .catch(() => {
+          if (isActive) setStatusMessage({ tone: 'error', text: 'Firebase search failed.' })
+        })
+        .finally(() => {
+          if (isActive) setIsLoadingCourses(false)
+        })
+    } else {
+      // --- ORIGINAL API LOGIC (DO NOT REMOVE) ---
+      const searchParams = new URLSearchParams()
+      if (query.trim()) searchParams.set('q', query.trim())
+      if (termFilter) searchParams.set('term', termFilter)
+      // ... rest of your searchParams logic
+
+      fetch(`/api/courses?${searchParams.toString()}`)
+        .then(async response => {
+          const payload = await response.json()
+          if (isActive) setCourseResults(payload.courses)
+        })
+        .catch(() => {
+          if (isActive) setStatusMessage({ tone: 'error', text: 'Local API lookup failed.' })
+        })
+        .finally(() => {
+          if (isActive) setIsLoadingCourses(false)
+        })
+    }
+
+    return () => {
+      isActive = false
+    }
+  }, [coursesRefreshNonce, maximumCredits, minimumCredits, query, termFilter, departmentFilter])
   useEffect(() => {
     if (filteredCourseResults.length === 0) {
       setSelectedCourseCode('')
@@ -260,30 +305,25 @@ export function TermwisePlanner() {
 
   async function runValidation() {
     setIsValidating(true)
+
+    const useFirebaseValidation = false // Toggle this when you're ready for cloud validation
+
     try {
-      const response = await fetch('/api/validate-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          terms,
-          completedCourses,
-          allowConcurrentEnrollment,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Validation failed.')
+      if (useFirebaseValidation) {
+        // Future: Call a Firebase Function or a service logic here
+        console.log('Using Cloud Validation')
+      } else {
+        // EXISTING API LOGIC
+        const response = await fetch('/api/validate-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ terms, completedCourses, allowConcurrentEnrollment }),
+        })
+        const payload = await response.json()
+        setValidation(payload)
       }
-
-      const payload = (await response.json()) as PlanValidationResponse
-      setValidation(payload)
     } catch {
-      setStatusMessage({
-        tone: 'error',
-        text: 'Validation failed. Last result is still shown.',
-      })
+      setStatusMessage({ tone: 'error', text: 'Validation failed.' })
     } finally {
       setIsValidating(false)
     }
@@ -448,7 +488,7 @@ export function TermwisePlanner() {
     })
   }
 
-  function savePlan(event: FormEvent<HTMLFormElement>) {
+  async function savePlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const name = saveName.trim() || `Plan ${new Date().toLocaleDateString()}`
@@ -474,24 +514,15 @@ export function TermwisePlanner() {
     setActivePlanId(savedPlan.id)
     localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(nextPlans))
 
-    void fetch('/api/plans', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: savedPlan.id,
-        name: savedPlan.name,
-        plan: savedPlan.plan,
-      }),
-    }).catch(() => {
-      // Local persistence still succeeds even when API persistence fails.
-    })
+    try {
+      // Treat the presence of a guestUserId as "logged in" for testing
+      const shouldSyncToCloud = !!guestUserId
+      await savePlanService(savedPlan, shouldSyncToCloud, guestUserId)
 
-    setStatusMessage({
-      tone: 'success',
-      text: `Saved \"${savedPlan.name}\".`,
-    })
+      setStatusMessage({ tone: 'success', text: `Saved locally & to Firebase as ${guestUserId}` })
+    } catch (error) {
+      setStatusMessage({ tone: 'error', text: 'Cloud sync failed; saved locally.' })
+    }
   }
 
   function loadPlan(planId: string) {
