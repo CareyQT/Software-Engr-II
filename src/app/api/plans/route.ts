@@ -9,6 +9,8 @@ import {
 } from '@/src/lib/services/planService'
 import { PlanDraft } from '@/src/lib/termwise/types'
 
+export const dynamic = 'force-static' //
+
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
   if (id) {

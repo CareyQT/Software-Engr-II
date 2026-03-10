@@ -3,6 +3,8 @@ import { NextRequest } from 'next/server'
 import { isPlanValidationRequest, validateStudentPlan } from '@/src/lib/services/validationService'
 import { PlanValidationRequest } from '@/src/lib/termwise/types'
 
+export const dynamic = 'force-static' //
+
 export async function POST(request: NextRequest) {
   try {
     const payload = (await request.json()) as Partial<PlanValidationRequest>

@@ -7,6 +7,8 @@ import {
   deleteCourse,
 } from '@/src/lib/services/CourseService'
 
+export const dynamic = 'force-static' //
+
 export async function GET(request: NextRequest) {
   try {
     const query = request.nextUrl.searchParams.get('q')?.trim() ?? ''
