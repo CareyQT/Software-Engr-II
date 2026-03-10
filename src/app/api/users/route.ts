@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllUsers, createUser } from '../../../lib/services/userService'
+/**
+ * Users API Route — /api/users
+ *
+ * GET    — Returns a list of all registered users.
+ * POST   — Creates a new user. Requires onid, email, and password_hash.
+ *
+ * Delegates all database logic to user_service.ts.
+ */
 
 export async function GET() {
   try {

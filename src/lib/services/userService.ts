@@ -6,6 +6,16 @@ export interface User {
   email: string
   created_at: string
 }
+/**
+ * User Service
+ *
+ * Handles all database operations for the Users table.
+ * Provides functions to retrieve all users, find a user by ID,
+ * create a new user, and delete a user by ID.
+ *
+ *
+ * Used by: /api/users/route.ts
+ */
 
 export async function getAllUsers() {
   try {

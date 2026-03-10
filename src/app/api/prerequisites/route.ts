@@ -6,6 +6,19 @@ import {
   deletePrerequisite,
 } from '../../../lib/services/PrereqService'
 
+/**
+ * Prerequisites API Route — /api/prerequisites
+ *
+ * GET    — Returns all prerequisite rules for a course.
+ *          Requires ?course_id query parameter.
+ * POST   — Creates a new prerequisite rule for a course.
+ *          Requires course_id, rule_type, and rule_json.
+ *          raw_text is optional.
+ * DELETE — Deletes all prerequisite rules for a course by course_id.
+ *
+ * Delegates all database logic to prerequisite_service.ts.
+ */
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)

@@ -5,6 +5,15 @@ export interface Major {
   name: string
   department: string | null
 }
+/**
+ * Major Service
+ *
+ * Handles all database operations for the Major table.
+ * Provides functions to retrieve all majors, find a major by ID,
+ * create a new major with an optional department, and delete a major.
+ *
+ * Used by: /api/majors/route.ts
+ */
 
 export async function getAllMajors() {
   try {
