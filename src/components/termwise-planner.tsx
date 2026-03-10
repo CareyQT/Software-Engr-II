@@ -49,6 +49,7 @@ import {
   calculateCumulativeGpa,
   calculateTermGpa,
   createDefaultTerms,
+  validatePlan,
 } from '@/src/lib/termwise/validation'
 import { cn } from '@/src/lib/utils'
 //Firebase services
@@ -299,31 +300,27 @@ export function TermwisePlanner() {
   }, [filteredCourseResults, selectedCourseCode])
 
   useEffect(() => {
-    void runValidation()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only run if there is actually something to validate
+    const hasCourses = terms.some(t => t.courses.length > 0) || completedCourses.length > 0
+
+    if (hasCourses) {
+      void runValidation()
+    }
   }, [allowConcurrentEnrollment, completedCourses, terms])
 
   async function runValidation() {
     setIsValidating(true)
-
-    const useFirebaseValidation = false // Toggle this when you're ready for cloud validation
-
     try {
-      if (useFirebaseValidation) {
-        // Future: Call a Firebase Function or a service logic here
-        console.log('Using Cloud Validation')
-      } else {
-        // EXISTING API LOGIC
-        const response = await fetch('/api/validate-plan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ terms, completedCourses, allowConcurrentEnrollment }),
-        })
-        const payload = await response.json()
-        setValidation(payload)
-      }
-    } catch {
-      setStatusMessage({ tone: 'error', text: 'Validation failed.' })
+      // Instead of calling the API, run the logic directly in the browser
+      const payload = validatePlan({
+        terms,
+        completedCourses,
+        allowConcurrentEnrollment,
+      })
+      setValidation(payload)
+    } catch (error) {
+      console.error(error)
+      setStatusMessage({ tone: 'error', text: 'Local validation failed.' })
     } finally {
       setIsValidating(false)
     }
