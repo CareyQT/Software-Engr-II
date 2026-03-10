@@ -1,5 +1,16 @@
 import pool from '@/src/db/db'
 
+/**
+ * Student Major Service
+ *
+ * Handles all database operations for the Student_Majors linking table,
+ * which supports students declaring multiple majors.
+ * Provides functions to retrieve all major assignments (optionally filtered
+ * by user), assign a major to a student, and remove a major from a student.
+ *
+ * Used by: /api/student-majors/route.ts
+ */
+
 export async function getStudentMajors(user_id?: number) {
   try {
     if (user_id) {

@@ -1,5 +1,19 @@
 import pool from '@/src/db/db'
 
+/**
+ * Offering Service
+ *
+ * Handles all database operations for the Offering table,
+ * which tracks which terms and years a course is available.
+ * Provides functions to retrieve all offerings for a course,
+ * create a new offering, and delete an offering by course ID, term, and year.
+ *
+ * Note: The Offering table has no surrogate primary key.
+ * Deletions are matched on the combination of course_id, term, and year.
+ *
+ * Used by: /api/offerings/route.ts
+ */
+
 export async function getOfferingsByCourse(course_id: number) {
   try {
     const result = await pool.query(

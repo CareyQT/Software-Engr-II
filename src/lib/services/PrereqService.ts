@@ -1,5 +1,19 @@
 import pool from '@/src/db/db'
 
+/**
+ * Prerequisite Service
+ *
+ * Handles all database operations for the Prerequisites table,
+ * which stores structured prerequisite rules for courses using JSONB.
+ * Provides functions to retrieve all prerequisite rules for a course,
+ * create a new rule, and delete all rules for a course.
+ *
+ * rule_json stores the structured rule (e.g. { "courses": ["CS161", "CS162"] })
+ * raw_text stores the human-readable version (e.g. "CS161 and CS162").
+ *
+ * Used by: /api/prerequisites/route.ts
+ */
+
 export async function getPrerequisitesByCourse(course_id: number) {
   try {
     const result = await pool.query('SELECT * FROM Prerequisites WHERE course_id = $1', [course_id])
