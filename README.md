@@ -25,6 +25,8 @@ For setup and local development instructions, see:
 - [`INSTALL.md`](./INSTALL.md) — How to access and use the app
 - [`SETUP.md`](./SETUP.md) — How to run or deploy the project locally(For Developers)
 
+To view the current state and version of the project, visit [`RELEASE.md`](./RELEASE.md)
+
 ---
 
 ## Features
