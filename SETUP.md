@@ -51,7 +51,7 @@ firebase deploy
 > Make sure you have the Firebase CLI installed (`npm install -g firebase-tools`) and are logged in (`firebase login`) before deploying.
 ## 6. For Future Development
 Hello, so you want to continue or start development on this project. Great, but there are a couple of things that you need to know
-to ensure that development advances smoothly. Please visit [`DEVELOPER.md'](./DEVELOPER.md)
+to ensure that development advances smoothly. Please visit [`DEVELOPMENT.md'](./DEVELOPMENT.md)
 
 
 ## Firebase Services Used
