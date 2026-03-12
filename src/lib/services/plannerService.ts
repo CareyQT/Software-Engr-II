@@ -3,6 +3,8 @@ import { db } from '@/src/lib/firebase'
 import { Course, SavedPlan, PlanDraft } from '@/src/lib/termwise/types'
 
 // --- COURSE QUERIES ---
+// src/lib/services/plannerService.ts
+
 export async function fetchCoursesFromFirebase(filters: {
   query?: string
   department?: string
@@ -12,18 +14,25 @@ export async function fetchCoursesFromFirebase(filters: {
     const coursesRef = collection(db, 'courses')
     let q = query(coursesRef, orderBy('code'))
 
-    if (filters.department) {
+    // 1. Department Filter (Strict Equality)
+    if (filters.department && filters.department !== '__all_departments__') {
       q = query(q, where('subject', '==', filters.department))
+    }
+
+    /** * Fix: Term Filter Logic
+     * Uses 'array-contains' to scan for a specific term string inside the offeredTerms array.
+     */
+    if (filters.term && filters.term !== '__all_terms__') {
+      q = query(q, where('offeredTerms', 'array-contains', filters.term))
     }
 
     const snapshot = await getDocs(q)
     const results = snapshot.docs.map(doc => ({
       id: doc.id,
-      ...(doc.data() as Course), // Cast the individual document data
+      ...(doc.data() as Course),
     })) as Course[]
 
-    // Firebase doesn't support partial string matching (search) well natively,
-    // so we filter the remaining results in memory for the 'query' string.
+    // 2. Keyword Search (In-Memory)
     if (filters.query) {
       const lowerQuery = filters.query.toLowerCase()
       return results.filter(

@@ -1,3 +1,11 @@
+export type ViewMode = 'plans' | 'search'
+export type GridRows = 1 | 2 | 4
+export type DragState = {
+  from: 'term' | 'cart'
+  termId?: string
+  code: string
+} | null
+
 export const TERM_SEASONS = ['Fall', 'Winter', 'Spring', 'Summer'] as const
 
 export type TermSeason = (typeof TERM_SEASONS)[number]
