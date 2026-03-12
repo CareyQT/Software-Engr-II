@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server'
 
+import { PlanDraft } from '@/features/plans/interfaces/plan'
 import {
   deletePlan,
   getPlanById,
   isValidPlanDraft,
   listPlans,
   savePlan,
-} from '@/src/lib/services/planService'
-import { PlanDraft } from '@/src/lib/termwise/types'
+} from '@/features/plans/services/plan-service'
 
 /**
  * Plans API Route — /api/plans
@@ -22,20 +22,26 @@ import { PlanDraft } from '@/src/lib/termwise/types'
  */
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
+  const ownerKey = request.nextUrl.searchParams.get('ownerKey')
   if (id) {
-    const plan = getPlanById(id)
+    const plan = await getPlanById(id, ownerKey)
     if (!plan) {
       return Response.json({ error: 'Plan not found.' }, { status: 404 })
     }
     return Response.json(plan, { status: 200 })
   }
 
-  return Response.json({ plans: listPlans() }, { status: 200 })
+  return Response.json({ plans: await listPlans(ownerKey) }, { status: 200 })
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const payload = (await request.json()) as { name?: string; plan?: PlanDraft; id?: string }
+    const payload = (await request.json()) as {
+      name?: string
+      plan?: PlanDraft
+      id?: string
+      ownerKey?: string
+    }
     if (!payload || typeof payload.name !== 'string' || !payload.plan) {
       return Response.json(
         {
@@ -54,9 +60,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const savedPlan = savePlan({
+    const savedPlan = await savePlan({
       id: payload.id,
       name: payload.name,
+      ownerKey: payload.ownerKey,
       plan: payload.plan,
     })
     return Response.json(savedPlan, { status: 201 })
@@ -67,11 +74,12 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
+  const ownerKey = request.nextUrl.searchParams.get('ownerKey')
   if (!id) {
     return Response.json({ error: 'Missing id query parameter.' }, { status: 400 })
   }
 
-  const deleted = deletePlan(id)
+  const deleted = await deletePlan(id, ownerKey)
   if (!deleted) {
     return Response.json({ error: 'Plan not found.' }, { status: 404 })
   }

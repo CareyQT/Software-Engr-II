@@ -5,7 +5,7 @@ import {
   createCourse,
   updateCourse,
   deleteCourse,
-} from '@/src/lib/services/CourseService'
+} from '@/features/courses/services/course-service'
 
 /**
  * Courses API Route — /api/courses
@@ -20,15 +20,24 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
+    const useCatalog = request.nextUrl.searchParams.get('catalog') === '1'
     const query = request.nextUrl.searchParams.get('q')?.trim() ?? ''
+    const department = request.nextUrl.searchParams.get('department')?.trim() ?? undefined
     const term = request.nextUrl.searchParams.get('term')?.trim() ?? undefined
     const minCredits = Number.parseInt(request.nextUrl.searchParams.get('minCredits') ?? '', 10)
     const maxCredits = Number.parseInt(request.nextUrl.searchParams.get('maxCredits') ?? '', 10)
 
-    const hasSearchParams = query || term || !Number.isNaN(minCredits) || !Number.isNaN(maxCredits)
+    const hasSearchParams =
+      useCatalog ||
+      query ||
+      department ||
+      term ||
+      !Number.isNaN(minCredits) ||
+      !Number.isNaN(maxCredits)
 
     if (hasSearchParams) {
       const result = searchCourses({
+        department,
         query,
         term,
         minCredits: Number.isNaN(minCredits) ? undefined : minCredits,

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCoursePrerequisites, listCoursePrerequisites } from '@/src/lib/services/CourseService'
+import { getCoursePrerequisites } from '@/features/courses/services/course-service'
 import {
   getPrerequisitesByCourse,
   createPrerequisite,
   deletePrerequisite,
-} from '../../../lib/services/PrereqService'
+} from '@/features/courses/services/prerequisite-service'
 
 /**
  * Prerequisites API Route — /api/prerequisites

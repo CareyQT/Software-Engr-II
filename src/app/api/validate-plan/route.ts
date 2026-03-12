@@ -1,7 +1,10 @@
 import { NextRequest } from 'next/server'
 
-import { isPlanValidationRequest, validateStudentPlan } from '@/src/lib/services/validationService'
-import { PlanValidationRequest } from '@/src/lib/termwise/types'
+import { PlanValidationRequest } from '@/features/plans/interfaces/plan'
+import {
+  isPlanValidationRequest,
+  validateStudentPlan,
+} from '@/features/plans/services/plan-validation-service'
 
 export async function POST(request: NextRequest) {
   try {
