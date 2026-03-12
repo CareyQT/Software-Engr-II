@@ -2,11 +2,6 @@
 
 This document is intended for developers who want to run or deploy TermWise locally.
 
-## Prerequisites
-- Node.js v18 or higher
-- npm v9 or higher
-- A Firebase account with access to the TermWise project
-
 ## 1. Clone the Repository
 ```bash
 git clone https://github.com/CareyQT/Software-Engr-II.git
@@ -14,6 +9,15 @@ cd Software-Engr-II
 ```
 
 ## 2. Install Dependencies
+You need to install Node.js v18 or higher. If you haven't, follow the instructions at https://nodejs.org/en/download
+
+To verify your Node.js version run:
+```bash
+node -v
+```
+You should see v18.0.0 or higher.
+
+Next, run the following in your terminal to install all required packages:
 ```bash
 npm install
 ```
