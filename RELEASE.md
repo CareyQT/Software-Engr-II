@@ -31,6 +31,7 @@ The following features are fully implemented and working in this release:
 | # | Feature | Description | Status |
 |---|---------|-------------|--------|
 | 1 | GPA Calculator | The GPA calculator feature is not functional in this release. Grade entry and GPA estimation are unavailable. | Open |
+| 2 | Filter settings | The filtering options in the search tab don't filter correctly and create bugs. | Open |
 
 > **Note:** GitHub issues will be filed for all known bugs. See the [issue tracker](https://github.com/CareyQT/Software-Engr-II/issues) for the most up-to-date status.
 
